@@ -196,7 +196,7 @@ jobs:
 
       - name: Prepare Hiero Solo
         id: solo
-        uses: hiero-ledger/hiero-solo-action@692b186bd2e4c8d46b9deb1c067dc6ddcf0abcd7 # v0.18.0
+        uses: hiero-ledger/hiero-solo-action@328bc84c3b00a990a151418144fd682a4eb76ea6 # v0.19.0
         with:
           soloVersion: v0.69.0
           installMirrorNode: true
@@ -255,7 +255,7 @@ jobs:
           msbuild-architecture: x64
 
       - name: Setup-perl
-        uses: shogo82148/actions-setup-perl@922d4ec780f14b8ff6d6e09c15d5eaee240b23a0 # v1.40.1
+        uses: shogo82148/actions-setup-perl@9f8c263975569ff3b4e510cb1f8813115749e146 # v1.41.0
         with:
           perl-version: "5.32"
           distribution: strawberry
