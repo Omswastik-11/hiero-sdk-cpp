@@ -569,6 +569,7 @@ TEST_F(ContractCreateTransactionIntegrationTests, CreateContractWithUnlimitedTok
   EXPECT_NO_THROW(contractId =
                     ContractCreateTransaction()
                       .setBytecodeFileId(fileId)
+                      .setAdminKey(operatorKey->getPublicKey())
                       .setGas(1000000ULL)
                       .setAutoRenewPeriod(std::chrono::hours(2016))
                       .setConstructorParameters(ContractFunctionParameters().addString("Hello from Hiero.").toBytes())

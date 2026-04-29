@@ -615,7 +615,6 @@ TEST_F(ContractUpdateTransactionIntegrationTests, UpdateContractToUnlimitedToken
                              .getReceipt(getTestClient())
                              .mFileId.value());
 
-  // Create contract with initial maxAutomaticTokenAssociations
   ContractId contractId;
   ASSERT_NO_THROW(contractId =
                     ContractCreateTransaction()
@@ -627,11 +626,13 @@ TEST_F(ContractUpdateTransactionIntegrationTests, UpdateContractToUnlimitedToken
                       .setMemo("[e2e::ContractUpdateTransaction]")
                       .setAutoRenewAccountId(AccountId(2ULL))
                       .setMaxAutomaticTokenAssociations(initialAssociations)
+                      .freezeWith(&getTestClient())
+                      .sign(newAdminKey)
                       .execute(getTestClient())
                       .getReceipt(getTestClient())
                       .mContractId.value());
 
-  // When - Update contract to unlimited associations
+  // When
   EXPECT_NO_THROW(ContractUpdateTransaction()
                     .setContractId(contractId)
                     .setMaxAutomaticTokenAssociations(unlimitedAssociations)
@@ -640,7 +641,7 @@ TEST_F(ContractUpdateTransactionIntegrationTests, UpdateContractToUnlimitedToken
                     .execute(getTestClient())
                     .getReceipt(getTestClient()));
 
-  // Then - Verify update
+  // Then
   ContractInfo contractInfo;
   ASSERT_NO_THROW(contractInfo = ContractInfoQuery().setContractId(contractId).execute(getTestClient()));
   EXPECT_EQ(contractInfo.mContractId, contractId);
