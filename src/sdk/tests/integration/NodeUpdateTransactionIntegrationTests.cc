@@ -24,12 +24,6 @@ class NodeUpdateTransactionIntegrationTests : public BaseIntegrationTest
 {
 protected:
   [[nodiscard]] const uint64_t& getNodeId() const { return mNodeId; }
-
-  // Node ID to update in tests
-  const uint64_t nodeIDToUpdate = 1;
-
-private:
-  const uint64_t mNodeId = 1;
 };
 
 //-----
@@ -89,8 +83,8 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountIdToTheSameAcc
 
   // When
   TransactionResponse txResponse;
-  ASSERT_NO_THROW(
-    txResponse = NodeUpdateTransaction().setNodeId(nodeIDToUpdate).setAccountId(originalNodeAccountId).execute(client));
+  ASSERT_NO_THROW(txResponse =
+                    NodeUpdateTransaction().setNodeId(getNodeId()).setAccountId(originalNodeAccountId).execute(client));
 
   // Then
   TransactionReceipt txReceipt;
@@ -126,7 +120,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, ChangeNodeAccountIdMissingAdminSig
 
   // When - Try to update without admin signature
   TransactionResponse updateResponse =
-    NodeUpdateTransaction().setNodeId(nodeIDToUpdate).setAccountId(operatorAccountId).execute(client);
+    NodeUpdateTransaction().setNodeId(getNodeId()).setAccountId(operatorAccountId).execute(client);
 
   // Then - Should fail with INVALID_SIGNATURE
   EXPECT_THROW({ updateResponse.setValidateStatus(true).getReceipt(client); }, ReceiptStatusException);
@@ -159,7 +153,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, ChangeNodeAccountIdMissingAccountS
 
   // When - Try to update without new account signature
   TransactionResponse updateResponse =
-    NodeUpdateTransaction().setNodeId(nodeIDToUpdate).setAccountId(nodeAccountId).execute(client);
+    NodeUpdateTransaction().setNodeId(getNodeId()).setAccountId(nodeAccountId).execute(client);
 
   // Then - Should fail with INVALID_SIGNATURE
   EXPECT_THROW({ updateResponse.setValidateStatus(true).getReceipt(client); }, ReceiptStatusException);
@@ -183,7 +177,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, ChangeNodeAccountIdToNonExistentAc
 
   // When - Try to update to non-existent account
   TransactionResponse updateResponse =
-    NodeUpdateTransaction().setNodeId(nodeIDToUpdate).setAccountId(AccountId(9999999ULL)).execute(client);
+    NodeUpdateTransaction().setNodeId(getNodeId()).setAccountId(AccountId(9999999ULL)).execute(client);
 
   // Then - Should fail with INVALID_SIGNATURE
   EXPECT_THROW({ updateResponse.setValidateStatus(true).getReceipt(client); }, ReceiptStatusException);
@@ -221,7 +215,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountIdToDeletedAcc
 
   // When - Try to update to deleted account
   NodeUpdateTransaction updateTransaction =
-    NodeUpdateTransaction().setNodeId(nodeIDToUpdate).setAccountId(newAccount).freezeWith(&client);
+    NodeUpdateTransaction().setNodeId(getNodeId()).setAccountId(newAccount).freezeWith(&client);
   TransactionResponse updateResponse = updateTransaction.sign(newAccountKey).execute(client);
 
   // Then - Should fail with ACCOUNT_DELETED
@@ -252,7 +246,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, ChangeNodeAccountIdNoBalance)
 
   // When - Try to update to account with zero balance
   NodeUpdateTransaction updateTransaction =
-    NodeUpdateTransaction().setNodeId(nodeIDToUpdate).setAccountId(newAccount).freezeWith(&client);
+    NodeUpdateTransaction().setNodeId(getNodeId()).setAccountId(newAccount).freezeWith(&client);
   TransactionResponse updateResponse = updateTransaction.sign(newAccountKey).execute(client);
 
   // Then - Should fail with NODE_ACCOUNT_HAS_ZERO_BALANCE
@@ -302,7 +296,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountUpdateAddressb
   TransactionReceipt txReceipt;
   std::cout << "Updating node with new account ID" << std::endl;
   ASSERT_NO_THROW(txReceipt = NodeUpdateTransaction()
-                                .setNodeId(nodeIDToUpdate)
+                                .setNodeId(getNodeId())
                                 .setAccountId(newNodeAccountId)
                                 .freezeWith(&client)
                                 .sign(newAccountKey)
@@ -325,9 +319,9 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountUpdateAddressb
       NodeAddressBook currentAddressBook = AddressBookQuery().setFileId(FileId::ADDRESS_BOOK).execute(client);
       for (const auto& address : currentAddressBook.getNodeAddresses())
       {
-        if (address.getNodeId() == nodeIDToUpdate && address.getAccountId() == newNodeAccountId)
+        if (address.getNodeId() == getNodeId() && address.getAccountId() == newNodeAccountId)
         {
-          std::cout << "Mirror node updated! Node " << nodeIDToUpdate << " now has AccountId "
+          std::cout << "Mirror node updated! Node " << getNodeId() << " now has AccountId "
                     << newNodeAccountId.toString() << std::endl;
           addressBookUpdated = true;
           break;
@@ -374,7 +368,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountUpdateAddressb
   // Revert the node account id so other tests can still function properly.
   std::cout << "Resetting node account ID" << std::endl;
   ASSERT_NO_THROW(txReceipt = NodeUpdateTransaction()
-                                .setNodeId(nodeIDToUpdate)
+                                .setNodeId(getNodeId())
                                 .setAccountId(node2OriginalAccountId)
                                 .execute(client)
                                 .getReceipt(client));
@@ -422,7 +416,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountWithoutMirrorN
   TransactionReceipt txReceipt;
   std::cout << "Updating node with new account ID" << std::endl;
   ASSERT_NO_THROW(txReceipt = NodeUpdateTransaction()
-                                .setNodeId(nodeIDToUpdate)
+                                .setNodeId(getNodeId())
                                 .setAccountId(newNodeAccountId)
                                 .freezeWith(&client)
                                 .sign(newAccountKey)
@@ -443,7 +437,7 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanChangeNodeAccountWithoutMirrorN
   // Revert the node account id so other tests can still function properly.
   std::cout << "Resetting node account ID" << std::endl;
   ASSERT_NO_THROW(txReceipt = NodeUpdateTransaction()
-                                .setNodeId(nodeIDToUpdate)
+                                .setNodeId(getNodeId())
                                 .setAccountId(node2OriginalAccountId)
                                 .execute(client)
                                 .getReceipt(client));

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+#include "AccountCreateTransaction.h"
 #include "BaseIntegrationTest.h"
 #include "ED25519PrivateKey.h"
 #include "NodeCreateTransaction.h"
@@ -13,7 +14,6 @@ using namespace Hiero;
 class NodeCreateTransactionIntegrationTests : public BaseIntegrationTest
 {
 protected:
-  [[nodiscard]] const AccountId& getAccountId() const { return mAccountId; }
   [[nodiscard]] const std::vector<Endpoint>& getGossipEndpoints() const { return mGossipEndpoints; }
   [[nodiscard]] const std::vector<Endpoint>& getGrpcServiceEndpoints() const { return mGrpcServiceEndpoints; }
   [[nodiscard]] const std::vector<std::byte> getGossipCertificate() const
@@ -22,7 +22,6 @@ protected:
   }
 
 private:
-  const AccountId mAccountId = AccountId::fromString("0.0.4");
   const Endpoint endpoint1 = Endpoint().setDomainName("test.com").setPort(123);
   const Endpoint endpoint2 = Endpoint().setDomainName("test2.com").setPort(123);
   const std::vector<Endpoint> mGossipEndpoints = { endpoint1, endpoint2 };
@@ -60,11 +59,22 @@ TEST_F(NodeCreateTransactionIntegrationTests, CanExecuteNodeCreateTransaction)
   // Given
   const std::shared_ptr<PrivateKey> adminKey = ED25519PrivateKey::generatePrivateKey();
 
+  TransactionResponse accountCreateTxResponse;
+  ASSERT_NO_THROW(accountCreateTxResponse = AccountCreateTransaction()
+                                              .setKey(adminKey->getPublicKey())
+                                              .setInitialBalance(Hbar(10LL))
+                                              .execute(getTestClient()));
+
+  TransactionReceipt accountCreateTxReceipt;
+  ASSERT_NO_THROW(accountCreateTxReceipt = accountCreateTxResponse.getReceipt(getTestClient()));
+  ASSERT_TRUE(accountCreateTxReceipt.mAccountId.has_value());
+  const AccountId newAccountId = accountCreateTxReceipt.mAccountId.value();
+
   // When / Then
   TransactionResponse txResponse;
 
   ASSERT_NO_THROW(txResponse = NodeCreateTransaction()
-                                 .setAccountId(getAccountId())
+                                 .setAccountId(newAccountId)
                                  .setGossipEndpoints(getGossipEndpoints())
                                  .setServiceEndpoints(getGrpcServiceEndpoints())
                                  .setGossipCaCertificate(getGossipCertificate())
