@@ -24,6 +24,9 @@ class NodeUpdateTransactionIntegrationTests : public BaseIntegrationTest
 {
 protected:
   [[nodiscard]] const uint64_t& getNodeId() const { return mNodeId; }
+
+private:
+  const uint64_t mNodeId = 1;
 };
 
 //-----
