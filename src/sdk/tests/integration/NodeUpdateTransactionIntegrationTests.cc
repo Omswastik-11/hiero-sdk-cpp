@@ -33,7 +33,18 @@ private:
 TEST_F(NodeUpdateTransactionIntegrationTests, CanExecuteNodeUpdateTransaction)
 {
   // Given
-  NodeAddressBook addressBook = AddressBookQuery().setFileId(FileId::ADDRESS_BOOK).execute(getTestClient());
+  // Use a client targeted at node 1 (account 0.0.4) to avoid submitting the
+  // NodeUpdateTransaction to the wrong node in the Solo CI environment.
+  std::unordered_map<std::string, AccountId> network;
+  network["localhost:51211"] = AccountId(4ULL);
+  Client client = Client::forNetwork(network);
+  client.setMirrorNetwork({ "localhost:5600" });
+  const std::string operatorKeyStr =
+    "302e020100300506032b65700422042091132178e72057a1d7528025956fe39b0b847f200ab59b2fdd367017f3087137";
+  std::shared_ptr<PrivateKey> originalOperatorKey = ED25519PrivateKey::fromString(operatorKeyStr);
+  client.setOperator(AccountId(2ULL), originalOperatorKey);
+
+  NodeAddressBook addressBook = AddressBookQuery().setFileId(FileId::ADDRESS_BOOK).execute(client);
   const auto& nodeAddresses = addressBook.getNodeAddresses();
   const auto nodeIt = std::find_if(nodeAddresses.begin(),
                                    nodeAddresses.end(),
@@ -48,17 +59,17 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanExecuteNodeUpdateTransaction)
 
   ASSERT_NO_THROW(
     txResponse =
-      NodeUpdateTransaction().setNodeId(getNodeId()).setDescription(updatedDescription).execute(getTestClient()));
+      NodeUpdateTransaction().setNodeId(getNodeId()).setDescription(updatedDescription).execute(client));
 
   TransactionReceipt txReceipt;
-  ASSERT_NO_THROW(txReceipt = txResponse.getReceipt(getTestClient()));
+  ASSERT_NO_THROW(txReceipt = txResponse.getReceipt(client));
 
   // Clean up
   ASSERT_NO_THROW(txReceipt = NodeUpdateTransaction()
                                 .setNodeId(getNodeId())
                                 .setDescription(originalDescription)
-                                .execute(getTestClient())
-                                .getReceipt(getTestClient()));
+                                .execute(client)
+                                .getReceipt(client));
 }
 
 //-----
