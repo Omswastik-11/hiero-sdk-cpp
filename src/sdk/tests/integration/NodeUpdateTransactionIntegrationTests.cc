@@ -26,17 +26,17 @@ protected:
   [[nodiscard]] const uint64_t& getNodeId() const { return mNodeId; }
 
 private:
-  const uint64_t mNodeId = 1;
+  const uint64_t mNodeId = 1; // Used by other tests; CanExecuteNodeUpdateTransaction uses 0ULL
 };
 
 //-----
 TEST_F(NodeUpdateTransactionIntegrationTests, CanExecuteNodeUpdateTransaction)
 {
   // Given
-  // Use a client targeted at node 1 (account 0.0.4) to avoid submitting the
-  // NodeUpdateTransaction to the wrong node in the Solo CI environment.
+  // Use a client targeted at node 0 (account 0.0.3) to match the reference
+  // implementations in the Java and Swift SDKs.
   std::unordered_map<std::string, AccountId> network;
-  network["localhost:51211"] = AccountId(4ULL);
+  network["localhost:50211"] = AccountId(3ULL);
   Client client = Client::forNetwork(network);
   client.setMirrorNetwork({ "localhost:5600" });
   const std::string operatorKeyStr =
@@ -46,9 +46,8 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanExecuteNodeUpdateTransaction)
 
   NodeAddressBook addressBook = AddressBookQuery().setFileId(FileId::ADDRESS_BOOK).execute(client);
   const auto& nodeAddresses = addressBook.getNodeAddresses();
-  const auto nodeIt = std::find_if(nodeAddresses.begin(),
-                                   nodeAddresses.end(),
-                                   [this](const NodeAddress& address) { return address.getNodeId() == getNodeId(); });
+  const auto nodeIt = std::find_if(
+    nodeAddresses.begin(), nodeAddresses.end(), [](const NodeAddress& address) { return address.getNodeId() == 0ULL; });
   ASSERT_NE(nodeIt, nodeAddresses.end());
   const std::string originalDescription = nodeIt->getDescription();
   const std::string updatedDescription =
@@ -57,19 +56,16 @@ TEST_F(NodeUpdateTransactionIntegrationTests, CanExecuteNodeUpdateTransaction)
   // When / Then
   TransactionResponse txResponse;
 
-  ASSERT_NO_THROW(
-    txResponse =
-      NodeUpdateTransaction().setNodeId(getNodeId()).setDescription(updatedDescription).execute(client));
+  ASSERT_NO_THROW(txResponse =
+                    NodeUpdateTransaction().setNodeId(0ULL).setDescription(updatedDescription).execute(client));
 
   TransactionReceipt txReceipt;
   ASSERT_NO_THROW(txReceipt = txResponse.getReceipt(client));
 
   // Clean up
-  ASSERT_NO_THROW(txReceipt = NodeUpdateTransaction()
-                                .setNodeId(getNodeId())
-                                .setDescription(originalDescription)
-                                .execute(client)
-                                .getReceipt(client));
+  ASSERT_NO_THROW(
+    txReceipt =
+      NodeUpdateTransaction().setNodeId(0ULL).setDescription(originalDescription).execute(client).getReceipt(client));
 }
 
 //-----
